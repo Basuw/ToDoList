@@ -31,3 +31,8 @@ Getting started
 
 
 .....
+
+Authors :
+
+Axel De La Fuente
+Bastien Jacquelin
