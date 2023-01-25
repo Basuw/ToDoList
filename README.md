@@ -32,7 +32,8 @@ Getting started
 
 .....
 
-Authors :
+## Authors :
 
 Axel De La Fuente
+
 Bastien Jacquelin
