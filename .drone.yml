@@ -1,0 +1,57 @@
+kind: pipeline
+type: docker
+name: todoPipeline
+
+trigger:
+  event:
+    - push
+
+steps:
+
+- name: deploy-container-mysql
+  image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
+  environment:
+      IMAGENAME: mariadb:latest
+      CONTAINERNAME: mariadb
+      COMMAND: create
+      # OVERWRITE: true
+      PRIVATE: true
+      CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:    
+        from_secret: db_root_password
+      CODEFIRST_CLIENTDRONE_ENV_MARIADB_DATABASE:
+        from_secret: db_database
+      CODEFIRST_CLIENTDRONE_ENV_MARIADB_USER:
+        from_secret: db_user
+      CODEFIRST_CLIENTDRONE_ENV_MARIADB_PASSWORD:
+        from_secret: db_password
+  
+- name: web-todo
+  image: plugins/docker
+  settings:
+    dockerfile: ./Dockerfile
+    context: ./
+    registry: hub.codefirst.iut.uca.fr
+    repo: hub.codefirst.iut.uca.fr/axel.de_la_fuente/todo_list
+    username:
+      from_secret: secret-registry-username
+    password:
+      from_secret: secret-registry-password
+
+- name: deploy-web-container
+  image: hub.codefirst.iut.uca.fr/thomas.bellembois/codefirst-dockerproxy-clientdrone:latest
+  environment:
+    IMAGENAME: hub.codefirst.iut.uca.fr/axel.de_la_fuente/todo_list:latest
+    CONTAINERNAME: todo_list
+    COMMAND: create
+    OVERWRITE: true
+    CODEFIRST_CLIENTDRONE_ENV_DB_SERVER:
+      from_secret: db_server
+    CODEFIRST_CLIENTDRONE_ENV_MARIADB_ROOT_PASSWORD:    
+      from_secret: db_root_password
+    CODEFIRST_CLIENTDRONE_ENV_MARIADB_DATABASE:
+      from_secret: db_database
+    CODEFIRST_CLIENTDRONE_ENV_MARIADB_USER:
+      from_secret: db_user
+    CODEFIRST_CLIENTDRONE_ENV_MARIADB_PASSWORD:
+      from_secret: db_password
+  depends_on: [ web-todo, deploy-container-mysql ]
